@@ -63,7 +63,7 @@ class LauncherJumpList {
         }
     
         recentArray := []
-        loop files "recent\*", "F"
+        loop files "recent\*.lnk", "F"
         {
             if A_LoopFileAttrib ~= "[HS]"
                 continue
@@ -86,17 +86,18 @@ class LauncherJumpList {
     
         if recentArray.Length > 0 {
             recentCol := IObjectCollection()
-            for file in recentArray
+            for shortcut in recentArray
             {
+                FileGetShortcut(shortcut.path, &filePath)
                 shellLink := IShellLink()
-                if file.ext != "" {
-                    title := SubStr(file.Name, 1, StrLen(file.name) - StrLen(file.ext) - 1)
+                if shortcut.ext != "" {
+                    title := SubStr(shortcut.Name, 1, StrLen(shortcut.name) - StrLen(shortcut.ext) - 1)
                     shellLink.SetTitle(title)
                 } else {
-                    shellLink.SetTitle(file.name)
+                    shellLink.SetTitle(shortcut.name)
                 }
-                shellLink.SetDescription(file.name)
-                shellLink.SetPath(file.path)
+                shellLink.SetDescription(filePath)
+                shellLink.SetPath(shortcut.path)
                 shellLink.Commit()
                 recentCol.AddObject(shellLink)
             }
