@@ -91,13 +91,12 @@ class icons {
         IconSelectUserGui.OnEvent("close", this.gui_close.Bind(this))
         IconSelectUserGui.IconSelectIndex := ""
 
-        IconSelectUserGui.Add("Text", "", "File:")
+        IconSelectUserGui.Add("Text", "xm y+10", "File:")
         ctl := IconSelectUserGui.Add("ComboBox", "vIconFile x+m yp-3 w400", this.IconSelectFileList)
-
         ctl.OnEvent("change", this.gui_events.Bind(this)) ; ObjBindMethod(this,"gui_events")
         ctl.Text := sIconFile
 
-        ctl := IconSelectUserGui.Add("Button", "vPickFileBtn x+m yp-2 w30", "•••")
+        ctl := IconSelectUserGui.Add("Button", "vPickFileBtn x+m yp-3 w30 h20", "•••")
         ctl.OnEvent("click", this.gui_events.Bind(this))
 
         LV := IconSelectUserGui.Add("ListView", "vIconList xm w480 h220 Icon")
@@ -123,26 +122,26 @@ class icons {
             IconSelectUserGui.Show()
 
         (sIconFile) ? this.IconSelectListIcons(IconSelectUserGui, sIconFile) : ""
-            sIconFile := StrReplace(IconSelectUserGui["IconFile"].Text, "%SystemRoot%", A_WinDir)
+        sIconFile := StrReplace(IconSelectUserGui["IconFile"].Text, "%SystemRoot%", A_WinDir)
 
-            Pause
+        Pause
 
-            If (idx := IconSelectUserGui.IconSelectIndex) {
-                If !(IconSelectUserGui.IconIndexArray.Has(idx)) {
-                    For index, obj in IconSelectUserGui.IconIndexArray {
-                        If (obj.name = idx) {
-                            oOutput := obj
-                            Break
-                        }
+        If (idx := IconSelectUserGui.IconSelectIndex) {
+            If !(IconSelectUserGui.IconIndexArray.Has(idx)) {
+                For index, obj in IconSelectUserGui.IconIndexArray {
+                    If (obj.name = idx) {
+                        oOutput := obj
+                        Break
                     }
-                } Else
-                    oOutput := IconSelectUserGui.IconIndexArray[idx]
+                }
             } Else
-                oOutput := { index: 0, type: "", file: "", name: "" }
+                oOutput := IconSelectUserGui.IconIndexArray[idx]
+        } Else
+            oOutput := { index: 0, type: "", file: "", name: "" }
 
-            IconSelectUserGui.Destroy()
+        IconSelectUserGui.Destroy()
 
-            return oOutput
+        return oOutput
     }
     Static gui_events(ctl, info) {
         If (ctl.Name = "IconFile") {
