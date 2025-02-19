@@ -6,6 +6,7 @@
 #Include lib\ThemeUtils.ahk
 #Include lib\WatchFolder.ahk
 #Include lib\DescriptionUtils.ahk
+
 AppUtils.SetCurrentProcessExplicitAppUserModelID(AppUserModelID)
 ;@Ahk2Exe-SetMainIcon res\launcher.ico
 TraySetIcon("res\launcher.ico")
@@ -19,10 +20,11 @@ launcherLnk := A_ScriptDir "\launchDir.lnk"
 
 if !FileExist(launcherLnk) {
     AppUtils.SelectLaunchDir()
-    if not FileExist(launcherLnk) {
+    if !FileExist(launcherLnk) {
         ExitApp
     }
 }
+
 try {
     FileGetShortcut launcherLnk, &launcherPath
 } catch {
@@ -42,9 +44,7 @@ OnMessage(WM_INITMENUPOPUP, MenuShowCallback)
 OnMessage(WM_MENURBUTTONUP, MenuRButtonUpCallback)
 OnMessage(WM_UNINITMENUPOPUP, HideToolTip)
 OnMessage(WM_MENUSELECT, HideToolTip)
-
 OnMessage(AppMsgNum, AppMsgCallback)
-
 
 A_IconTip := "导航菜单"
 A_TrayMenu.Delete()
@@ -59,17 +59,15 @@ A_TrayMenu.Add("OpenAppDir", (*) => Run("explorer " A_ScriptDir))
 A_TrayMenu.Add()
 
 dpiZom := A_ScreenDPI / 96
-
 IconSize := Integer(32 * dpiZom)
 
-BulidLauncherMenu()
+BuildLauncherMenu()
 
 if showOnLoaded {
     ShowLauncherMenu()
 }
 
-watchLauncerDir := WatchFolder(launcherPath, "LaunchChangeCallback", true, 0x00000013)
-
+watchLauncherDir := WatchFolder(launcherPath, "LaunchChangeCallback", true, 0x00000013)
 Run '"' A_AhkPath '" "' A_ScriptDir '\Autorun.ahk"'
 
 return
@@ -84,9 +82,9 @@ InitArg() {
     }
 }
 
-BulidLauncherMenu() {
+BuildLauncherMenu() {
     try {
-        launcTree := DirTreeMenu.getDirTree(launcherPath)
+        launchTree := DirTreeMenu.getDirTree(launcherPath)
     } catch TimeoutError as err {
         MsgBox(err.Message)
         return
@@ -94,16 +92,15 @@ BulidLauncherMenu() {
 
     global launcherMenu
     global scriptMenu
-    launcherMenu := DirTreeMenu.createMenu(launcTree, IconSize, LauncherMenuCallback)
+    launcherMenu := DirTreeMenu.createMenu(launchTree, IconSize, LauncherMenuCallback)
 
     loadAhkScript := IniRead(configIni, "config", "loadAhkScript", 0)
 
-    if (loadAhkScript) {
+    if loadAhkScript {
         scriptMenu := Menu()
         scriptMenu.DefineProp("data", { Value: Array() })
 
-        loop files A_ScriptDir "\ux\*.ahk", "F"
-        {
+        loop files A_ScriptDir "\ux\*.ahk", "F" {
             menuName := SubStr(A_LoopFileName, 1, StrLen(A_LoopFileName) - 4)
             scriptMenu.Add(menuName, LauncherMenuCallback)
             scriptMenu.data.Push({ path: A_LoopFileFullPath, name: menuName })
@@ -121,12 +118,12 @@ AppMsgCallback(wParam, lParam, *) {
         case 1111:
             ShowLauncherMenu()
         case 1112:
-            BulidLauncherMenu()
+            BuildLauncherMenu()
     }
 }
 
 ShowLauncherMenu() {
-    if not IsSet(launcherMenu) {
+    if !IsSet(launcherMenu) {
         global showOnLoaded
         showOnLoaded := true
         return
@@ -138,7 +135,7 @@ ShowLauncherMenu() {
     if nowDpiZom != dpiZom {
         dpiZom := nowDpiZom
         IconSize := Integer(32 * dpiZom)
-        BulidLauncherMenu()
+        BuildLauncherMenu()
         ShowLauncherMenu()
         return
     }
@@ -146,7 +143,7 @@ ShowLauncherMenu() {
     MouseGetPos(&mouseX, &mouseY)
     ; default menu pos to mouse pos
     menu_x := mouseX, menu_y := mouseY
-    ;获取活动区域
+    ; 获取活动区域
     MonitorGetWorkArea(, &wLeft, &wTop, &wRight, &wBottom)
 
     menuW := 80 * dpiZom
@@ -179,10 +176,10 @@ MenuShowCallback(wParam, lParam, *) {
 
 LauncherMenuCallback(ItemName, ItemPos, MyMenu) {
     rPath := MyMenu.data[ItemPos].path
-    if not DirExist("recent") {
+    if !DirExist("recent") {
         DirCreate("recent")
     }
-    if (rPath ~= ".*?.ahk$") {
+    if rPath ~= ".*?.ahk$" {
         Run('"' A_AhkPath '" "' rPath '"')
         return
     }
@@ -203,7 +200,6 @@ LauncherMenuCallback(ItemName, ItemPos, MyMenu) {
             } catch {
                 MsgBox("运行" rPath "失败." A_LastError)
             }
-
         }
     }
     LauncherJumpList.up(AppUserModelID)
@@ -231,7 +227,7 @@ MenuRButtonUpCallback(wParam, lParam, *) {
 }
 
 LaunchChangeCallback(path, notifications) {
-    BulidLauncherMenu()
+    BuildLauncherMenu()
 }
 
 SelectLaunchDir(*) {
