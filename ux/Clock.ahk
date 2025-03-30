@@ -8,12 +8,15 @@
 
 trCfg := {
     Y: 20, ; 窗口Y坐标
-    backgound: 0x000000, ; 背景色
-    o: { stroke: 1, color: 0x000000 }, ; 字体颜色
+    c: "None", ; 背景色
 }
+textStyle := "s:52.7 color:White outline:(stroke:1 glow:4 tint:Black) dropShadow:(blur:5px color:White opacity:0.5 size:15)"
 tr := TextRender()
+tr.None() ; 无事件
+tr.ClickThrough() ; 点击穿透
+tr.NoActivate() ; 不激活窗口
 minutes := A_Min ; 记录当前分钟数
-tr.Render(FormatTime(A_Now, "HH:mm"), trCfg) ; 显示当前时间
+tr.Render(FormatTime(A_Now, "HH:mm"), trCfg, textStyle) ; 显示当前时间
 
 SetTimer(UpTime, 1000) ; 每秒更新一次
 
@@ -24,6 +27,6 @@ UpTime()
     {
         minutes := A_Min ; 更新分钟数
         tr.Clear()
-        tr.Render(FormatTime(A_Now, "HH:mm"), trCfg) ; 更新显示的时间
+        tr.Render(FormatTime(A_Now, "HH:mm"), trCfg, textStyle) ; 更新显示的时间
     }
 }
