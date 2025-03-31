@@ -4,8 +4,25 @@
 #Requires AutoHotkey v2.0
 #NoTrayIcon
 #Include ..\lib\TextRender.ahk
+#Include ..\lib\WinEvent.ahk
+#Include ..\lib\WinUtils.ahk
 
-Clock.Show()
+WinEvent.Active(WinActiveCallback) ; 监听窗口激活事件
+
+WinActiveCallback(*) {
+    SetTimer(UpClockStatus, 100) ; 设置定时器，100ms后执行UpClockStatus函数
+}
+
+UpClockStatus() {
+    if (WinUtils.IsFullScreen()) ; 如果当前窗口是全屏窗口
+    {
+        Clock.Show() ; 显示时钟
+    }
+    else
+    {
+        Clock.Hide() ; 隐藏时钟
+    }
+}
 
 Class Clock {
 
@@ -22,12 +39,18 @@ Class Clock {
         this.tr.None() ; 无事件
         this.tr.ClickThrough() ; 点击穿透
         this.tr.NoActivate() ; 不激活窗口
+
     }
 
     static Show() {
         this.minutes := A_Min ; 记录当前分钟数
         this.tr.Render(FormatTime(A_Now, "HH:mm"), this.trCfg, this.textStyle) ; 显示当前时间
         SetTimer(this.trTimer, 1000) ; 每秒更新一次
+    }
+
+    static Hide() {
+        this.tr.Clear() ; 清除显示的时间
+        SetTimer(this.trTimer, 0) ; 关闭定时器
     }
 
     static UpTime()
