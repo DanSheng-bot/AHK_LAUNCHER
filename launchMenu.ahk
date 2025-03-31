@@ -6,6 +6,7 @@
 #Include lib\ThemeUtils.ahk
 #Include lib\WatchFolder.ahk
 #Include lib\DescriptionUtils.ahk
+#Include lib\AhkScriptUtils.ahk
 
 AppUtils.SetCurrentProcessExplicitAppUserModelID(AppUserModelID)
 ;@Ahk2Exe-SetMainIcon res\launcher.ico
@@ -39,11 +40,11 @@ InitArg()
 WM_INITMENUPOPUP := 0x0117
 WM_MENURBUTTONUP := 0x0122
 WM_UNINITMENUPOPUP := 0x0125
-WM_MENUSELECT := 0x11F
+WM_MENUSELECT := 0x11F ;当用户选择菜单项时发送到菜单的所有者窗口。
 OnMessage(WM_INITMENUPOPUP, MenuShowCallback)
 OnMessage(WM_MENURBUTTONUP, MenuRButtonUpCallback)
-OnMessage(WM_UNINITMENUPOPUP, HideToolTip)
-OnMessage(WM_MENUSELECT, HideToolTip)
+OnMessage(WM_UNINITMENUPOPUP, MenuUnPopupCallback)
+OnMessage(WM_MENUSELECT, MenuSelectCallback)
 OnMessage(AppMsgNum, AppMsgCallback)
 
 A_IconTip := "导航菜单"
@@ -205,6 +206,10 @@ LauncherMenuCallback(ItemName, ItemPos, MyMenu) {
     LauncherJumpList.up(AppUserModelID)
 }
 
+MenuSelectCallback(wParam, lParam, *) {
+    HideToolTip()
+}
+
 MenuRButtonUpCallback(wParam, lParam, *) {
     menuItem := DirTreeMenu.findMenu(launcherMenu.data, lParam, wParam)
     if menuItem {
@@ -219,11 +224,18 @@ MenuRButtonUpCallback(wParam, lParam, *) {
         }
     } else if lParam = scriptMenu.Handle {
         ahkPath := scriptMenu.data[wParam + 1].path
-        description := DescriptionUtils.getAhkDescription(ahkPath)
-        if description {
-            ToolTip(description)
+        if GetKeyState("Ctrl", "P") {
+            AhkScript.Exit(ahkPath)
+            scriptMenu.SetIcon(wParam + 1 "&", "*")
+        } else {
+            description := DescriptionUtils.getAhkDescription(ahkPath)
+            ToolTip(description "`n按住Ctrl右击结束脚本")
         }
     }
+}
+
+MenuUnPopupCallback(wParam, lParam, *) {
+    HideToolTip()
 }
 
 LaunchChangeCallback(path, notifications) {
