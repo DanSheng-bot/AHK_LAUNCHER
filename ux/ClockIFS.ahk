@@ -2,6 +2,7 @@
  * @description 时钟,在全屏窗口中显示当前时间。
  ***********************************************************************/
 #Requires AutoHotkey v2.0
+#SingleInstance Force
 #NoTrayIcon
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
@@ -13,7 +14,7 @@ WinActiveCallback(*) {
     SetTimer(UpClockStatus, 100) ; 设置定时器，100ms后执行UpClockStatus函数
 }
 
-UpClockStatus() {
+UpClockStatus(){
     if (WinUtils.IsFullScreen()) ; 如果当前窗口是全屏窗口
     {
         Clock.Show() ; 显示时钟
@@ -39,7 +40,7 @@ Class Clock {
         this.tr.None() ; 无事件
         this.tr.ClickThrough() ; 点击穿透
         this.tr.NoActivate() ; 不激活窗口
-
+        this.tr.AlwaysOnTop() ; 始终在最上层
     }
 
     static Show() {
