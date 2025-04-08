@@ -94,7 +94,8 @@ AddWatchFile(wacthDir) {
     wfUi.fileEdit.Text := ""
     wfUi.actionEdit.Text := ""
     wfUi.todoEdit.Text := ""
-    wfUi.Show("w600 h400")
+    cfgGui.GetPos(&x, &y, &w, &h)
+    wfUi.Show("w600 h400 x" x + 10 " y" y + 10)
 }
 
 EditWatchFile(watchFile) {
@@ -102,7 +103,8 @@ EditWatchFile(watchFile) {
     wfUi.fileEdit.Text := watchFile["file"]
     wfUi.actionEdit.Text := watchFile["action"]
     wfUi.todoEdit.Text := watchFile["todo"]
-    wfUi.Show("w600 h400")
+    cfgGui.GetPos(&x, &y, &w, &h)
+    wfUi.Show("w600 h400 x" x + 10 " y" y + 10)
 }
 
 Remove(id) {

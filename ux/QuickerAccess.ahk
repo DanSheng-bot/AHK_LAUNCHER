@@ -6,8 +6,8 @@
 #SingleInstance Force
 #NoTrayIcon
 DllCall("Shell32.dll\SetCurrentProcessExplicitAppUserModelID", "str", "AhkQuickerAccess")
-Global CONFIG_FILEPATH := (()=>(SplitPath(A_ScriptName,,,,&Name), A_ScriptDir "\data\" Name ".ini"))()
-Global DefaultConfig := Map("AddressList","%USERPROFILE%`nDocuments`nMusic`nPictures`nDownloads`n%WINDIR%\Web\Wallpaper`n%APPDATA%`n%TEMP%`n%SYSTEMROOT%\Notepad.exe`nipconfig /flushdns", "WindowSize","w400 h400", "ShowKey","!q")
+Global CONFIG_FILEPATH := (() => (SplitPath(A_ScriptName, , , , &Name), A_ScriptDir "\data\" Name ".ini"))()
+Global DefaultConfig := Map("AddressList", "%USERPROFILE%`nDocuments`nMusic`nPictures`nDownloads`n%WINDIR%\Web\Wallpaper`n%APPDATA%`n%TEMP%`n%SYSTEMROOT%\Notepad.exe`nipconfig /flushdns", "WindowSize", "w400 h400", "ShowKey", "!q")
 Global Config := LoadConfig(CONFIG_FILEPATH, DefaultConfig)
 Global PreparedAddressList, MainGui, hActvWnd
 
@@ -19,8 +19,10 @@ If FileExist(shell32dll := EnvGet("SystemRoot") "\System32\shell32.dll")
 MainGui := Gui("+Owner +Resize", "QuickerAccess")
 MainGui.SetFont("s10", "Segoe UI")
 MainGui.MarginX := 0, MainGui.MarginY := 0
-FilterEdit := MainGui.Add("Edit", "vFilterEdit")
+FilterEdit := MainGui.Add("Edit", " ")
 FilterEdit.OnEvent("Change", FilterOnChange)
+CgfButton := MainGui.Add("Button", "w30 h26", "•••")
+CgfButton.OnEvent("Click", ShowCfgMenu)
 AddressList := MainGui.Add("ListView", "vAddressList +LV0x10000 -E0x200", ["Name", "Path"])
 AddressList.OnEvent("Click", AddressListOnClick)
 AddressList.OnEvent("ContextMenu", AddressListContextMenu)
@@ -32,6 +34,11 @@ MainGui.OnEvent("DropFiles", MainGuiOnDropFiles)
 OnMessage(0x100, MainGuiOnKeyDown) ; WM_KEYDOWN
 OnMessage(0x232, MainGuiAfterSize) ; WM_EXITSIZEMOVE
 
+cfgMenu := Menu()
+cfgMenu.Add("&Settings", Settings)
+cfgMenu.Add("&EditAddress", (*) => EditAddressList())
+cfgMenu.Add("&Exit", (*) => ExitApp())
+
 MainGui.Show(Config["WindowSize"] " Hide")
 ToggleHotkeys("On")
 
@@ -39,6 +46,11 @@ PreparedAddressList := PrepareAddressList(Config["AddressList"])
 
 UpdateAddressList()
 AdjustDimensions()
+
+ShowCfgMenu(*) {
+	CgfButton.GetPos(&X, &Y, &W, &H)
+	cfgMenu.Show(X - 60, Y + H)
+}
 
 ToggleMainGui(*) {
 	Global hActvWnd, MainGui
@@ -56,7 +68,7 @@ ToggleMainGui(*) {
 	}
 }
 
-ToggleHotkeys(On:=true) {
+ToggleHotkeys(On := true) {
 	Hotkey Config["ShowKey"], ToggleMainGui, On
 }
 
@@ -72,7 +84,7 @@ AddressListContextMenu(LV, ItemIndex, IsRightClick, X, Y) {
 	M.Add()
 	M.Add("Edit a&ddress list", (*) => EditAddressList())
 	M.Show(X, Y)
-	
+
 	CopyAddress(*) {
 		AddressItem := PreparedAddressList[ItemID]
 		A_Clipboard := AddressItem["Address"]
@@ -80,9 +92,9 @@ AddressListContextMenu(LV, ItemIndex, IsRightClick, X, Y) {
 	EditAddress(*) {
 		EditGui := EditAddressList()
 		WinExist(AddressEdit := EditGui["AddressEdit"])
-		LineIndex := SendMessage(0xBB, ItemID-1) ; EM_LINEINDEX
+		LineIndex := SendMessage(0xBB, ItemID - 1) ; EM_LINEINDEX
 		LineLength := SendMessage(0xC1, LineIndex) ; EM_LINELENGTH
-		SendMessage(0xB1, LineIndex, LineIndex+LineLength) ; EM_SETSEL
+		SendMessage(0xB1, LineIndex, LineIndex + LineLength) ; EM_SETSEL
 		SendMessage(0xB7) ; EM_SCROLLCARET
 	}
 	RemoveAddress(*) {
@@ -124,41 +136,42 @@ EditAddressList() {
 	For Address in Config[Section]
 		AddressList .= Address "`n"
 	AddressEdit := EditGui.Add("Edit", "w600 r16 -Wrap -E0x200 vAddressEdit", AddressList) ; WS_EX_CLIENTEDGE
-	AddressEdit.OnEvent("Change", ChangeCB:=(*) => (
+	AddressEdit.OnEvent("Change", ChangeCB := (*) => (
 		AddressEdit.OnEvent("Change", ChangeCB, 0),
 		EditGui.Title := "*" EditGui.Title
 	), 1)
-	OnMessage(0x111, FocusCB:=(wp, lp, msg, hwnd) => (  ; ON_EN_SETFOCUS
+	OnMessage(0x111, FocusCB := (wp, lp, msg, hwnd) => (  ; ON_EN_SETFOCUS
 		hwnd = EditGui.Hwnd && (
 			PostMessage(0xB1, 0, 0, lp), ; EM_SETSEL
 			OnMessage(msg, FocusCB, 0)
 		)
 	), 1)
 	(SaveButton := EditGui.Add("Button", "wp", "&Save")).OnEvent("Click", Save)
-	EditGui.Show()
+	MainGui.GetPos(&X, &Y, &W, &H)
+	EditGui.Show("x" X + W/2 - 300 " y" Y + 10)
 	Return EditGui
-	
+
 	OnSize(GuiObj, MinMax, Width, Height) {
-		SaveButton.GetPos(,,, &H)
+		SaveButton.GetPos(, , , &H)
 		Height -= H,
-		AddressEdit.Move(,, Width, Height),
-		SaveButton.Move(, Height, Width)
+			AddressEdit.Move(, , Width, Height),
+			SaveButton.Move(, Height, Width)
 	}
-	
+
 	OnKeyDown(wp, lp, msg, hwnd) {
 		; VK_BACK := 8, VK_S = 83
 		If (hwnd = AddressEdit.Hwnd) {
 			If (wp = 8 && GetKeyState("Ctrl")) {
-				CaretIndex := SendMessage(0x1512,,, AddressEdit) ; EM_GETCARETINDEX
+				CaretIndex := SendMessage(0x1512, , , AddressEdit) ; EM_GETCARETINDEX
 				LineNumber := EditGetCurrentLine(AddressEdit)
-				LineIndex := SendMessage(0xBB, LineNumber-1, , AddressEdit) ; EM_LINEINDEX
-				LineToCaretText := SubStr(AddressEdit.Text, LineIndex+1, CaretIndex-LineIndex)
-				
+				LineIndex := SendMessage(0xBB, LineNumber - 1, , AddressEdit) ; EM_LINEINDEX
+				LineToCaretText := SubStr(AddressEdit.Text, LineIndex + 1, CaretIndex - LineIndex)
+
 				RightBoundPos := (
-					P:=InStr(LineToCaretText, "\",, -2),
-					!P && P:=InStr(LineToCaretText, " ",, -2),
-				P)
-				SendMessage(0xB1, LineIndex+StrLen(LineToCaretText), LineIndex+RightBoundPos, AddressEdit) ; EM_SETSEL
+					P := InStr(LineToCaretText, "\", , -2),
+					!P && P := InStr(LineToCaretText, " ", , -2),
+					P)
+				SendMessage(0xB1, LineIndex + StrLen(LineToCaretText), LineIndex + RightBoundPos, AddressEdit) ; EM_SETSEL
 				SendMessage(0xC2, true, 0, AddressEdit) ; EM_REPLACESEL
 				Return 0
 			}
@@ -168,7 +181,7 @@ EditAddressList() {
 			}
 		}
 	}
-	
+
 	OnSysKeyDown(wp, lp, msg, hwnd) {
 		; VK_UP = 38, VK_DOWN = 40
 		If (hwnd = AddressEdit.Hwnd) && (wp = 38 || wp = 40) {
@@ -177,7 +190,7 @@ EditAddressList() {
 			Return 0
 		}
 	}
-	
+
 	OnDropFiles(GuiObj, GuiCtrl, FileArray, X, Y) {
 		If !GuiCtrl
 			Return
@@ -197,10 +210,10 @@ EditAddressList() {
 				For File in FileArray
 					Files .= File "`r`n"
 				EditPaste Files, AddressEdit
-				PostMessage(0xB1, LineIndex, LineIndex+StrLen(Files), AddressEdit) ; EM_SETSEL
+				PostMessage(0xB1, LineIndex, LineIndex + StrLen(Files), AddressEdit) ; EM_SETSEL
 		}
 	}
-	
+
 	OnPaste(wp, lp, msg, hwnd) { ; Thanks to teadrinker https://www.autohotkey.com/boards/viewtopic.php?p=569093
 		Static CF_HDROP := 0xF
 		If !(wp = 0x16 && hwnd = AddressEdit.hwnd)
@@ -218,7 +231,7 @@ EditAddressList() {
 		}
 		DllCall("CloseClipboard")
 	}
-	
+
 	OnClose(*) {
 		EditGui.Destroy()
 		EditGui := unset
@@ -234,7 +247,7 @@ EditAddressList() {
 		)
 		EditGui.Close()
 		IniDelete(CONFIG_FILEPATH, Section),
-		IniWrite(AddressListStr, CONFIG_FILEPATH, Section)
+			IniWrite(AddressListStr, CONFIG_FILEPATH, Section)
 		UpdateAddressList()
 		AdjustDimensions()
 	}
@@ -242,18 +255,19 @@ EditAddressList() {
 
 AdjustDimensions() {
 	Static Column1Padding := 15
-	MainGui.GetClientPos(,, &Width, &Height)
-	FilterEdit.Move(,, Width),
-	FilterEdit.GetPos(, , , &H),
-	Height -= H,
-	LV := MainGui["AddressList"],
-	LV.Opt("-Redraw")
-	LV.Move(,, W := Width, Height),
-	Width -= LV_GetVScrollWidth(LV),
-	LV.ModifyCol(1, "AutoHdr"),
-	Column1Width := SendMessage(0x101D, 0, , LV), ;LVM_GETCOLUMNWIDTH
-	LV.ModifyCol(1, Column1Width+Column1Padding),
-	LV.ModifyCol(2, Width-Column1Width-Column1Padding)
+	MainGui.GetClientPos(, , &Width, &Height)
+	FilterEdit.Move(, , Width - 30),
+		CgfButton.Move(Width - 30, 0),
+		FilterEdit.GetPos(, , , &H),
+		Height -= H,
+		LV := MainGui["AddressList"],
+		LV.Opt("-Redraw")
+	LV.Move(, H, W := Width, Height),
+		Width -= LV_GetVScrollWidth(LV),
+		LV.ModifyCol(1, "AutoHdr"),
+		Column1Width := SendMessage(0x101D, 0, , LV), ;LVM_GETCOLUMNWIDTH
+		LV.ModifyCol(1, Column1Width + Column1Padding),
+		LV.ModifyCol(2, Width - Column1Width - Column1Padding)
 	LV.Opt("+Redraw")
 }
 
@@ -275,7 +289,7 @@ MainGuiAfterSize(wParam, lParam, msg, hwnd) {
 
 MainGuiOnKeyDown(wParam, lParam, Msg, hWnd) {
 	Static VK_ENTER := 0xD, VK_SPACE := 0x20, VK_PRIOR := 0x21, VK_NEXT := 0x22,
-	       VK_UP := 0x26, VK_DOWN := 0x28, VK_C := 0x43, VK_E := 0x45, VK_F := 0x46
+		VK_UP := 0x26, VK_DOWN := 0x28, VK_C := 0x43, VK_E := 0x45, VK_F := 0x46
 	If !(GuiCtrl := GuiCtrlFromHwnd(hWnd))
 		Return
 	Switch GuiCtrl.Gui
@@ -316,7 +330,7 @@ MainGuiOnDropFiles(GuiObj, GuiCtrl, FileArray, X, Y) {
 	If !GuiCtrl
 		Return
 	Switch GuiCtrl.Hwnd {
-		Case (LV:=MainGui["AddressList"]).Hwnd:
+		Case (LV := MainGui["AddressList"]).Hwnd:
 			AddressList := Config["AddressList"]
 			For File in FileArray {
 				AddressList.Push(File)
@@ -363,7 +377,7 @@ FilterOnChange(FilterCtrl, *) {
 	SetTimer DebounceFunc, -(FilterCtrl.value = "" ? 1 : 100)
 }
 
-UpdateAddressList(Query:="") {
+UpdateAddressList(Query := "") {
 	Global PreparedAddressList
 	Static ImageListID
 	If Query != "" {
@@ -381,13 +395,13 @@ UpdateAddressList(Query:="") {
 	}
 	LV := MainGui["AddressList"]
 	LV.Opt("-Redraw")
-	TopIndex := SendMessage(0x1027,,, LV)-1 ; LVM_GETTOPINDEX
-	CountPerPage := SendMessage(0x1028,,, LV) ; LVM_GETCOUNTPERPAGE
+	TopIndex := SendMessage(0x1027, , , LV) - 1 ; LVM_GETTOPINDEX
+	CountPerPage := SendMessage(0x1028, , , LV) ; LVM_GETCOUNTPERPAGE
 	LV.Delete()
 	; Calculate buffer size required for SHFILEINFO structure.
 	sfi_size := A_PtrSize + 688
 	sfi := Buffer(sfi_size)
-	
+
 	If !IsSet(ImageListID) {
 		ImageListID := IL_Create(PreparedAddressList.Length)
 		LV.SetImageList(ImageListID)
@@ -402,7 +416,7 @@ UpdateAddressList(Query:="") {
 		}
 	}
 	If TopIndex > 0 && Query = ""
-		LV.Modify(TopIndex+CountPerPage+1, "+Vis")
+		LV.Modify(TopIndex + CountPerPage + 1, "+Vis")
 	LV.Opt("+Redraw")
 
 	Add(Address, Index, ID) {
@@ -430,7 +444,7 @@ ParseAddress(Address) {
 	SplitPath Address, &FileName, &FileDir
 	Name := FileName, Path := Address, FilePath := Address
 	If !DllCall("Shlwapi\PathIsDirectory", "Ptr", StrPtr(Address)) {
-		DllCall("Shlwapi\PathRemoveArgs", "Ptr", StrPtr(NameOnly:=FileName))
+		DllCall("Shlwapi\PathRemoveArgs", "Ptr", StrPtr(NameOnly := FileName))
 		HasArgs := FileName != NameOnly
 		FilePath := (FileDir = "" ? "" : FileDir "\") NameOnly
 		If HasArgs
@@ -439,11 +453,11 @@ ParseAddress(Address) {
 			Name := NameOnly, Path := FilePath
 		Else For Item in ComObject("Shell.Application").NameSpace(0x11).Items ; ssfDRIVES
 			If Item.IsFolder && Item.Name = FileName && (
-			Name := Item.Name, Path := FilePath := Address := Item.Path
-			, true)
+				Name := Item.Name, Path := FilePath := Address := Item.Path
+				, true)
 				Break
-		Else
-			Name := FileName, Path := FilePath
+			Else
+				Name := FileName, Path := FilePath
 	}
 	Return Map("Name", Name, "Path", Path, "FilePath", FilePath, "Address", Address)
 }
@@ -486,7 +500,7 @@ OpenSelected() {
 					If IsDir {
 						Try If ControlGetHwnd("Address Band Root1", hExplorerWnd) {
 							WinActivate(hExplorerWnd)
-							ControlSend "{Ctrl down}{l down}{l up}{Ctrl up}",, hExplorerWnd
+							ControlSend "{Ctrl down}{l down}{l up}{Ctrl up}", , hExplorerWnd
 							ControlSetText Address, "Edit2", hExplorerWnd
 							ControlSend "{Enter}", "Edit2", hExplorerWnd
 							ControlFocus "Edit1", hExplorerWnd
@@ -523,17 +537,17 @@ LoadConfig(Path, Default) {
 	Try Config["ShowKey"] := IniRead(Path, "Settings", "ShowKey")
 	Catch
 		IniWrite(Default["ShowKey"], Path, "Settings", "ShowKey"),
-		Config["ShowKey"] := Default["ShowKey"]
+			Config["ShowKey"] := Default["ShowKey"]
 
 	Try Config["WindowSize"] := IniRead(Path, "Settings", "WindowSize")
 	Catch
 		IniWrite(Default["WindowSize"], Path, "Settings", "WindowSize"),
-		Config["WindowSize"] := Default["WindowSize"]
+			Config["WindowSize"] := Default["WindowSize"]
 
 	Try Config["AddressList"] := IniRead(Path, "AddressList")
 	Catch
 		IniWrite(Default["AddressList"], Path, "AddressList"),
-		Config["AddressList"] := Default["AddressList"]
+			Config["AddressList"] := Default["AddressList"]
 
 	; Post-processing
 	Config["AddressList"] := LoadAddressList(Config["AddressList"])
@@ -543,7 +557,7 @@ LoadConfig(Path, Default) {
 LoadAddressList(AddressListStr) {
 	Local AddressList := []
 	Loop Parse, AddressListStr, "`n"
-		If (Address:=Trim(A_LoopField)) != ""
+		If (Address := Trim(A_LoopField)) != ""
 			AddressList.Push(Address)
 	Return AddressList
 }
@@ -565,9 +579,11 @@ Settings(*) {
 	SettingsGui.SetFont("s9", "Segoe UI")
 	SettingsGui.AddText("xs+10 ys+45 section", "Show/Hide Window: ")
 	SettingsGui.AddHotkey("x+10 vShowKey", Config["ShowKey"])
-	SettingsGui.OnEvent("Close", (GuiObj, *) => ( ToggleHotkeys("On"), GuiObj.Destroy() ))
-	SettingsGui.Show()
-	
+	SettingsGui.OnEvent("Close", (GuiObj, *) => (ToggleHotkeys("On"), GuiObj.Destroy()))
+	MainGui.GetPos(&X, &Y, &W, &H)
+	SettingsGui.Opt("+Owner" MainGui.Hwnd)
+	SettingsGui.Show("x" X + W / 2 - 150 " y" Y + 100)
+
 	Save(*) {
 		Submission := SettingsGui.Submit()
 		Config["ShowKey"] := Submission.ShowKey != "" ? Submission.ShowKey : DefaultConfig["ShowKey"]
@@ -586,7 +602,7 @@ LV_GetVScrollWidth(LV) {
 
 MoveLine(editCtrl, direction) { ; Thanks to teadrinker https://www.autohotkey.com/boards/viewtopic.php?p=580004#p579968
 	static EM_GETCARETINDEX := 0x1512, EM_LINEFROMCHAR := 0x00C9, EM_LINEINDEX := 0x00BB, EM_GETLINE := 0x00C4
-		 , EM_LINELENGTH := 0x00C1, EM_GETLINECOUNT := 0x00BA, EM_SETSEL := 0x00B1, EM_REPLACESEL := 0x00C2
+		, EM_LINELENGTH := 0x00C1, EM_GETLINECOUNT := 0x00BA, EM_SETSEL := 0x00B1, EM_REPLACESEL := 0x00C2
 	editCtrl.Opt("-Redraw")
 	WinExist(editCtrl)
 	caretPos := SendMessage(EM_GETCARETINDEX)
@@ -599,7 +615,7 @@ MoveLine(editCtrl, direction) { ; Thanks to teadrinker https://www.autohotkey.co
 	swapLinePos := SendMessage(EM_LINEINDEX, swapLineIdx)
 	currentLineText := GetLineText(currentLineIdx, currentLinePos, &currentLineLen)
 	swapLineText := GetLineText(swapLineIdx, swapLinePos, &swapLineLen)
-	
+
 	line1 := direction ? 'swapLine' : 'currentLine'
 	line2 := direction ? 'currentLine' : 'swapLine'
 	text := %line1%Text . '`r`n' . %line2%Text
@@ -629,11 +645,11 @@ ExpandEnvironmentStrings(Str) {
 
 Init() {
 	Array.Prototype.Join := ArrayJoin
-	ArrayJoin(ArrayObj, Delim:=",") {
+	ArrayJoin(ArrayObj, Delim := ",") {
 		Str := ""
 		For Index, Value in ArrayObj
 			Str .= Delim . Value
-		Return SubStr(Str, StrLen(Delim)+1)
+		Return SubStr(Str, StrLen(Delim) + 1)
 	}
 	Gui.ListView.Prototype.SetItemParam := SetItemParam
 	SetItemParam(This, Row, Value) {

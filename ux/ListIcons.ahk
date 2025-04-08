@@ -96,7 +96,7 @@ class icons {
         ctl.OnEvent("change", this.gui_events.Bind(this)) ; ObjBindMethod(this,"gui_events")
         ctl.Text := sIconFile
 
-        ctl := IconSelectUserGui.Add("Button", "vPickFileBtn x+m yp-3 w30 h20", "•••")
+        ctl := IconSelectUserGui.Add("Button", "vPickFileBtn x+m yp-3 w30 h26", "•••")
         ctl.OnEvent("click", this.gui_events.Bind(this))
 
         LV := IconSelectUserGui.Add("ListView", "vIconList xm w480 h220 Icon")
