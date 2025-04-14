@@ -24,7 +24,8 @@ WinEvent.Active((*) => SetCapsLockState('Off'))
 ; 禁用左Shift切换输入法,不改变shift原有功能
 ~LShift:: Send "{Blind}{vkFF}"
 
-Pause::Media_Play_Pause
+$Pause::Media_Play_Pause
+$^Pause::Pause
 
 ; 双击CapsLock切换大小写
 CapsLock:: {
