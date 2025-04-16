@@ -16,7 +16,7 @@ Init()
 If FileExist(shell32dll := EnvGet("SystemRoot") "\System32\shell32.dll")
 	TraySetIcon(shell32dll, "321")
 
-MainGui := Gui("+Owner +Resize", "QuickerAccess")
+MainGui := Gui("+Owner +Resize -MinimizeBox", "QuickerAccess")
 MainGui.SetFont("s10", "Segoe UI")
 MainGui.MarginX := 0, MainGui.MarginY := 0
 FilterEdit := MainGui.Add("Edit", " ")
