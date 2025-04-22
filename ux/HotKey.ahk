@@ -13,10 +13,17 @@
 #NoTrayIcon
 #Include "..\lib\WinClip.ahk"
 #Include "..\lib\WinEvent.ahk"
+#Include "..\lib\TextRender.ahk"
 #Include "..\lib\GoogleTranslate.ahk"
 KeyHistory(0)
 SetWinDelay 2
 CoordMode "Mouse"
+
+tr := TextRender()
+tr.None() ; 无事件
+tr.ClickThrough() ; 点击穿透
+tr.NoActivate() ; 不激活窗口
+tr.AlwaysOnTop() ; 始终在最上层
 
 ; 切换窗口后关闭大写锁定键
 WinEvent.Active((*) => SetCapsLockState('Off'))
@@ -24,8 +31,12 @@ WinEvent.Active((*) => SetCapsLockState('Off'))
 ; 禁用左Shift切换输入法,不改变shift原有功能
 ~LShift:: Send "{Blind}{vkFF}"
 
-$Pause::Media_Play_Pause
-$^Pause::Pause
+$Pause:: {
+    Send("{Media_Play_Pause}")
+    MonitorGetWorkArea(, &wLeft, &wTop, &wRight, &wBottom)
+    tr.Render("Play/Pause", { Y: "80%", r: "6%", time: 1000 }, { b: true })
+}
+$^Pause:: Pause
 
 ; 双击CapsLock切换大小写
 CapsLock:: {

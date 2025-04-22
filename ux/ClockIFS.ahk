@@ -14,7 +14,7 @@ WinActiveCallback(*) {
     SetTimer(UpClockStatus, 100) ; 设置定时器，100ms后执行UpClockStatus函数
 }
 
-UpClockStatus(){
+UpClockStatus() {
     if (WinUtils.IsFullScreen()) ; 如果当前窗口是全屏窗口
     {
         Clock.Show() ; 显示时钟
@@ -31,7 +31,11 @@ Class Clock {
         Y: 20, ; 窗口Y坐标
         c: "None", ; 背景色
     }
-    static textStyle := "s:52.7 color:White outline:(stroke:1 glow:4 tint:Black) dropShadow:(blur:5px color:White opacity:0.5 size:15)"
+    static textStyle := { s: 52.7,
+        color: "White",
+        outline: { stroke: 1, glow: 4, tint: "Black" },
+        dropShadow: { blur: "5px", color: "White", opacity: 0.5, size: 15 }
+    }
     static tr := TextRender()
     static trTimer := ObjBindMethod(this, "UpTime")
     static minutes := A_Min ; 记录当前分钟数
