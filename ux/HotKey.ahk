@@ -31,12 +31,17 @@ WinEvent.Active((*) => SetCapsLockState('Off'))
 ; 禁用左Shift切换输入法,不改变shift原有功能
 ~LShift:: Send "{Blind}{vkFF}"
 
+; Pause 键暂停/恢复播放
 $Pause:: {
     Send("{Media_Play_Pause}")
-    MonitorGetWorkArea(, &wLeft, &wTop, &wRight, &wBottom)
-    tr.Render("Play/Pause", { Y: "80%", r: "6%", time: 1000 }, { b: true })
+    tr.Render("⏯", { Y: "80%", r: "6%", time: 1000 }, { b: true })
 }
-$^Pause:: Pause
+
+; Win + Pause 发送Pause键
+$#Pause:: {
+    Send("{Pause}")
+    tr.Render("Pause", { Y: "80%", r: "6%", time: 1000 }, { b: true })
+}
 
 ; 双击CapsLock切换大小写
 CapsLock:: {
