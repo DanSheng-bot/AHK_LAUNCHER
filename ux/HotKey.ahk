@@ -34,9 +34,9 @@ lWinS := 0
 ~LWin:: {
     Send "{Blind}{vkFF}"
     global lWinS := lWinS + 1
-
 }
 ~LWin Up:: {
+    OutputDebug(A_PriorKey)
     if (A_PriorKey = "" and lWinS < 2) {
         Send("{LWin}")
     }
@@ -53,8 +53,9 @@ $Pause:: {
 }
 
 ; Win + Pause 发送Pause键
-$#Pause:: {
+#Pause:: {
     Send("{Pause}")
+    global lWinS := 3
     tr.Render("Pause", { Y: "80%", r: "10%", time: 1000 }, { b: true })
 }
 
