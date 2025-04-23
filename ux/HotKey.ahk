@@ -15,7 +15,8 @@
 #Include "..\lib\WinEvent.ahk"
 #Include "..\lib\TextRender.ahk"
 #Include "..\lib\GoogleTranslate.ahk"
-KeyHistory(0)
+InstallKeybdHook
+KeyHistory(3)
 SetWinDelay 2
 CoordMode "Mouse"
 
@@ -28,19 +29,33 @@ tr.AlwaysOnTop() ; 始终在最上层
 ; 切换窗口后关闭大写锁定键
 WinEvent.Active((*) => SetCapsLockState('Off'))
 
+; 长按win键不发送
+lWinS := 0
+~LWin:: {
+    Send "{Blind}{vkFF}"
+    global lWinS := lWinS + 1
+
+}
+~LWin Up:: {
+    if (A_PriorKey = "" and lWinS < 2) {
+        Send("{LWin}")
+    }
+    global lWinS := 0
+}
+
 ; 禁用左Shift切换输入法,不改变shift原有功能
 ~LShift:: Send "{Blind}{vkFF}"
 
 ; Pause 键暂停/恢复播放
 $Pause:: {
     Send("{Media_Play_Pause}")
-    tr.Render("⏯", { Y: "80%", r: "6%", time: 1000 }, { b: true })
+    tr.Render("Media Play/Pause", { Y: "80%", r: "10%", time: 1000 }, { b: true })
 }
 
 ; Win + Pause 发送Pause键
 $#Pause:: {
     Send("{Pause}")
-    tr.Render("Pause", { Y: "80%", r: "6%", time: 1000 }, { b: true })
+    tr.Render("Pause", { Y: "80%", r: "10%", time: 1000 }, { b: true })
 }
 
 ; 双击CapsLock切换大小写
@@ -56,7 +71,7 @@ CapsLock:: {
 ; This forces capslock into a modifying key & blocks the alt/start menus
 *CapsLock:: Send '{Blind}{vkFF}'
 
-
+; CapsLock 组合快捷键
 #HotIf GetKeyState("CapsLock", "P")
 
 ; Disables Alt menu and Start Menu when CapsLock pressed!
