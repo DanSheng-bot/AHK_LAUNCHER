@@ -239,7 +239,7 @@ MenuUnPopupCallback(wParam, lParam, *) {
 }
 
 LaunchChangeCallback(path, notifications) {
-    BuildLauncherMenu()
+    SetTimer(BuildLauncherMenu, -1000)
 }
 
 SelectLaunchDir(*) {
