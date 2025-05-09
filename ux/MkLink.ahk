@@ -92,7 +92,7 @@ LinkTypeClick(GuiCtrlObj, Info) {
 
 SelectLink(*) {
     mkLinkUi.Opt("+OwnDialogs")
-    dir := DirSelect()
+    dir := DirSelect(, , "mkLink `n select link dir")
     if dir {
         linkEdit.Text := dir
     }
@@ -102,12 +102,12 @@ SelectLink(*) {
 SelectTarget(*) {
     mkLinkUi.Opt("+OwnDialogs")
     if linkType = "" || linkType = "/H" {
-        f := FileSelect()
+        f := FileSelect(, , "mkLink `n select target")
         if f {
             targetEdit.Text := f
         }
     } else {
-        dir := DirSelect()
+        dir := DirSelect(, , "mkLink `n select target")
         targetEdit.Text := dir
     }
     CmdChange()
