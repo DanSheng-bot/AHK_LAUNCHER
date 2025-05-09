@@ -4,7 +4,6 @@
 
 #Requires AutoHotkey v2.0
 #NoTrayIcon
-#Include ..\lib\RunAsAdmin.ahk
 
 try FileDelete("%localappdata%\Iconcache.db")
 
