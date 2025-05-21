@@ -15,30 +15,32 @@ class WinUtils
         if (!uid) {
             Return False
         }
-        winPId := WinGetPID("ahk_id " uid)
-        winIdList := WinGetList("ahk_pid " winPId)
-        for winId in winIdList {
-            c := WinGetClass(winId)
-            If (uid = DllCall("GetDesktopWindow") Or (c = "Progman") Or (c = "WorkerW")) {
-                Return False
-            }
-            WinGetClientPos(&cx, &cy, &cw, &ch, winId)
-            cl := cx
-            ct := cy
-            cr := cx + cw
-            cb := cy + ch
+        try {
+            winPId := WinGetPID("ahk_id " uid)
+            winIdList := WinGetList("ahk_pid " winPId)
+            for winId in winIdList {
+                c := WinGetClass(winId)
+                If (uid = DllCall("GetDesktopWindow") Or (c = "Progman") Or (c = "WorkerW")) {
+                    Return False
+                }
+                WinGetClientPos(&cx, &cy, &cw, &ch, winId)
+                cl := cx
+                ct := cy
+                cr := cx + cw
+                cb := cy + ch
 
-            a := []
-            loop MonitorGetCount()
-            {
-                MonitorGet(A_Index, &Left, &Top, &Right, &Bottom)
-                a.Push({ l: Left, t: Top, r: Right, b: Bottom })
-            }
+                a := []
+                loop MonitorGetCount()
+                {
+                    MonitorGet(A_Index, &Left, &Top, &Right, &Bottom)
+                    a.Push({ l: Left, t: Top, r: Right, b: Bottom })
+                }
 
-            For , v in a
-            {
-                if (cl == v.l and ct == v.t and cr == v.r and cb == v.b) {
-                    Return True
+                For , v in a
+                {
+                    if (cl == v.l and ct == v.t and cr == v.r and cb == v.b) {
+                        Return True
+                    }
                 }
             }
         }
