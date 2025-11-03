@@ -36,14 +36,18 @@ class ICustomDestinationList {
     }
 
     /**
-     * 添加自定义类别
+     * 添加自定义类别, 可能会没有权限
      * @param {String} szCategory 类别名称
      * @param {IObjectArray} ObjectArray IshellLink列表
      * @returns {Float | Integer | String} 
      */
     AppendCategory(szCategory, ObjectArray)
     {
-        return ComCall(05, this, "str", szCategory, "ptr", ObjectArray.ptr)
+        try {
+            return ComCall(05, this, "str", szCategory, "ptr", ObjectArray.ptr)
+        } catch as err {
+            return err.Message
+        }
     }
 
     /**

@@ -95,9 +95,9 @@ u:: {
     cSelected := GetSelectedText()
     if Trim(cSelected) {
         if (IsIncludeLowercase(cSelected)) {
-            WinClip.SetText(StrUpper(cSelected), false, false)
+            WinClip.SetText(StrUpper(cSelected))
         } else {
-            WinClip.SetText(StrLower(cSelected), false, false)
+            WinClip.SetText(StrLower(cSelected))
         }
         SendEvent("^v")
     }
