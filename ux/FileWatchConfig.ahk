@@ -6,6 +6,7 @@
 #SingleInstance Force
 #Include ..\lib\Json.ahk
 #Include ..\lib\ArrayExtensions.ahk
+#Include ..\lib\AhkScriptUtils.ahk
 TraySetIcon("..\res\fcl.ico")
 DllCall("Shell32.dll\SetCurrentProcessExplicitAppUserModelID", "str", "AhkFileWatch")
 
@@ -17,7 +18,7 @@ if not DirExist("data") {
 
 cfgGui := Gui()
 cfgGui.Title := "FileWatchConfig"
-statusBar := cfgGui.AddStatusBar(, " 这是一个监察文件夹变动进行一些操作的应用.")
+statusBar := cfgGui.AddStatusBar(, " 这是一个监察文件夹变动进行一些操作的应用.配置更改后需要手动保存配置")
 fMenu := Menu()
 fMenu.Add("save", SaveConfig)
 fMenu.Add("reload", ReloadConfig)
@@ -54,6 +55,7 @@ SaveConfig(*) {
         cfgJson := JSON.Dump(cfg)
         try FileDelete configPath
         FileAppend(cfgJson, configPath)
+        AhkScript.Reload("FileWatch.ahk")
     }
 }
 
