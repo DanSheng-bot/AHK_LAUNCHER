@@ -36,7 +36,7 @@ class ICustomDestinationList {
     }
 
     /**
-     * 添加自定义类别, 可能会没有权限
+     * 添加自定义类别, 如果启用了隐私组策略或用户隐私设置，AppendCategory 可能会失败。 自定义类别包含基于个人使用情况的用户特定项目，这些隐私设置不允许这些项。
      * @param {String} szCategory 类别名称
      * @param {IObjectArray} ObjectArray IshellLink列表
      * @returns {Float | Integer | String} 
