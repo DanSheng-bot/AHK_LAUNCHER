@@ -24,7 +24,7 @@ hgs.Register(gestureUpDown, "Refresh")
 
 hotRButton := false
 
-#HotIf GetKeyState("RButton", "P")
+#HotIf isRdp() and GetKeyState("RButton", "P")
 
 WheelDown:: {
     Send("{PgDn}")
@@ -91,6 +91,10 @@ $RButton:: {
     else if (!hotRButton) {
         SendEvent("{RButton}")
     }
+}
+
+isRdp() {
+    return SysGet(4096) = 0
 }
 
 isInternetExplorer() {
