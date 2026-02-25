@@ -2,6 +2,7 @@
  * @description 鼠标手势
  ***********************************************************************/
 #Requires AutoHotkey v2.0
+#Include ..\lib\AhkScriptUtils.ahk
 #Include ..\lib\HotGestures.ahk
 #SingleInstance Force
 #NoTrayIcon
@@ -102,4 +103,12 @@ isInternetExplorer() {
     curCtrlClassNN := ""
     Try curCtrlClassNN := ControlGetClassNN(curCtrl)
     return InStr(curCtrlClassNN, "Internet Explorer")
+}
+
+; 监听显示器变更事件，刷新脚本以适应新的显示设置
+WM_DISPLAYCHANGE := 0x007E
+OnMessage(WM_DISPLAYCHANGE, ON_WM_DISPLAYCHANGE)
+
+ON_WM_DISPLAYCHANGE(wParam, lParam, *) {
+    Reload()
 }
