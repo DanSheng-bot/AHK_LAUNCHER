@@ -108,6 +108,7 @@ class Config {
             ux := uxFiles[Item]
             If (ux.status) {
                 cMenu.Add("结束", EndScript)
+                cMenu.Add("重启", ReloadScript)
             } else {
                 cMenu.Add("运行", RunScript)
             }
@@ -159,6 +160,12 @@ class Config {
             filePos := MyMenu.data
             fileName := uxFiles[filePos].name
             AhkScript.Exit(A_ScriptDir "\ux\" fileName)
+        }
+
+        ReloadScript(ItemName, ItemPos, MyMenu) {
+            filePos := MyMenu.data
+            fileName := uxFiles[filePos].name
+            AhkScript.Reload(A_ScriptDir "\ux\" fileName)
         }
 
         Autorun(fileName) {
