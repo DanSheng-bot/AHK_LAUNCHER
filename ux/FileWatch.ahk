@@ -19,7 +19,7 @@ wJson := FileRead(configPath)
 data := JSON.Load(wJson)
 
 for item in data {
-    WatchFolder(item["dir"], "FileChangeCallback", true, 0x00000010)
+    WatchFolder(item["dir"], FileChangeCallback.Name, true, 0x00000010)
 }
 
 FileChangeCallback(path, notifications) {
