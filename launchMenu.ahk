@@ -68,7 +68,7 @@ if showOnLoaded {
     ShowLauncherMenu()
 }
 
-watchLauncherDir := WatchFolder(launcherPath, "LaunchChangeCallback", true, 0x00000013)
+WatchFolder(launcherPath, LaunchChangeCallback.Name, true, 0x00000013)
 Run '"' A_AhkPath '" "' A_ScriptDir '\Autorun.ahk"'
 
 return
