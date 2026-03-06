@@ -239,6 +239,7 @@ MenuUnPopupCallback(wParam, lParam, *) {
 }
 
 LaunchChangeCallback(path, notifications) {
+    SetTimer(BuildLauncherMenu, 0)
     SetTimer(BuildLauncherMenu, -1000)
 }
 

@@ -11,8 +11,8 @@ DetectHiddenWindows True
 
 cMenu := Menu()
 cMenu.DefineProp("data", { Value: "" })
-cMenu.Add("重载", LvMenuCallback)
-cMenu.Add("结束", LvMenuCallback)
+cMenu.Add("重载(&R)", LvMenuCallback)
+cMenu.Add("结束(&E)", LvMenuCallback)
 
 myGui := Gui()
 myGui.Title := "AHK脚本进程管理"
