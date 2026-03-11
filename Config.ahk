@@ -6,6 +6,7 @@
 #Include lib\ArrayExtensions.ahk
 #Include lib\AhkScriptUtils.ahk
 #Include lib\WinEvent.ahk
+#Include lib\IShellLink.ahk
 TraySetIcon("res\launcher.ico")
 DetectHiddenWindows True
 AppUtils.SetCurrentProcessExplicitAppUserModelID(AppUserModelID)
