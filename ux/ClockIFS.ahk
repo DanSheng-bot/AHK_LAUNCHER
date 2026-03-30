@@ -3,10 +3,16 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+;@Ahk2Exe-IgnoreBegin
 #NoTrayIcon
+;@Ahk2Exe-IgnoreEnd
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
 #Include ..\lib\WinUtils.ahk
+
+A_IconTip := "全屏应用时钟"
+A_TrayMenu.Delete()
+A_TrayMenu.Add("Exit", (*) => ExitApp())
 
 WinEvent.Active(WinActiveCallback) ; 监听窗口激活事件
 
