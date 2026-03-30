@@ -3,6 +3,8 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+;@Ahk2Exe-ExeName %A_ScriptDir%\program\ClockIFS.exe
+;@Ahk2Exe-SetMainIcon ..\res\clock.ico
 ;@Ahk2Exe-IgnoreBegin
 #NoTrayIcon
 ;@Ahk2Exe-IgnoreEnd
