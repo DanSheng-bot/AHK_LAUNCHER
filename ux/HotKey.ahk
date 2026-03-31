@@ -160,7 +160,7 @@ v::#!^+v
 }
 
 ; 拖动窗口
-LButton::
+$LButton::
 {
     ; Get the initial mouse position and window id, and
     ; abort if the window is maximized.
@@ -183,7 +183,7 @@ LButton::
 }
 
 ; 调整窗口大小
-RButton::
+$RButton::
 {
     ; Get the initial mouse position and window id, and
     ; abort if the window is maximized.
