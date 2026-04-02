@@ -16,7 +16,7 @@ Persistent true
 TraySetIcon("..\res\clock.ico") ; 设置托盘图标
 A_IconTip := "全屏应用时钟"
 A_TrayMenu.Delete()
-A_TrayMenu.Add("设置", ShowConfig)
+A_TrayMenu.Add("设置", (*) => ConfigUi.show())
 A_TrayMenu.Default := "1&"
 A_TrayMenu.Add("退出", (*) => ExitApp())
 
@@ -30,7 +30,7 @@ WinActiveCallback(*) {
 }
 
 UpClockStatus() {
-    if (WinUtils.IsFullScreen()) ; 如果当前窗口是全屏窗口
+    if (WinUtils.IsFullScreen() or ConfigUi.isShow()) ; 如果当前窗口是全屏窗口
     {
         Clock.Show() ; 显示时钟 
     }
@@ -38,11 +38,6 @@ UpClockStatus() {
     {
         Clock.Hide() ; 隐藏时钟
     }
-}
-
-ShowConfig(*) {
-    static config := ConfigUi() ; 创建配置界面实例
-    config.show()
 }
 
 Class Clock {
@@ -93,21 +88,33 @@ Class Clock {
 }
 
 Class ConfigUi {
-    __New() {
+    static __New() {
         this.ui := Gui()
         this.ui.Title := "ColckIFS设置"
         this.ui.Add("Text", "x20 y12 w60 h20", "字体大小:")
         this.fontSizeInput := this.ui.Add("Edit", "Number x80 y10 w50 h20", Clock.textStyle.size)
         this.fontSizeInput.OnEvent("Change", this.FontSizeInputChangeHandler.Bind(this))
+        this._isShown := false
+        this.ui.OnEvent("Close", this.OnClose.Bind(this))
     }
 
-    show() {
+    static show() {
         this.ui.Show("w620 h420")
+        this._isShown := true
     }
 
-    FontSizeInputChangeHandler(Ctrl, *) {
+    static isShow() {
+        return this._isShown
+    }
+
+    static OnClose(*) {
+        this._isShown := false
+    }
+
+    static FontSizeInputChangeHandler(Ctrl, *) {
         Clock.textStyle.size := this.fontSizeInput.Value
         IniWrite(Clock.textStyle.size, Clock.configPath, "Text", "FontSize")
+        Clock.Show()
     }
 
 }
