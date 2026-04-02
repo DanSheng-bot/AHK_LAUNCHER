@@ -30,7 +30,7 @@ WinActiveCallback(*) {
 }
 
 UpClockStatus() {
-    if (WinUtils.IsFullScreen() or ConfigUi.isShow) ; 如果当前窗口是全屏窗口
+    if (Clock.alwaysShow or WinUtils.IsFullScreen() or ConfigUi.isShow) ; 如果始终显示 或 当前窗口是全屏窗口
     {
         Clock.Show() ; 显示时钟 
     }
@@ -58,6 +58,7 @@ Class Clock {
     static tr := TextRender()
     static trTimer := ObjBindMethod(this, "UpTime")
     static minutes := A_Min ; 记录当前分钟数
+    static alwaysShow := IniRead(this.configPath, "General", "AlwaysShow", 0)
 
     static __New() {
         this.tr.NoEvents() ; 不响应鼠标事件
@@ -97,6 +98,10 @@ Class ConfigUi {
         this.ui.Add("Text", "x20 y12 w60 h20", "字体大小:")
         this.fontSizeInput := this.ui.Add("Edit", "Number x80 y10 w50 h20", Clock.textStyle.size)
         this.fontSizeInput.OnEvent("Change", this.FontSizeInputChangeHandler.Bind(this))
+        ; 始终显示时间选项
+        this.alwaysShow := Clock.alwaysShow
+        this.alwaysCheck := this.ui.Add("CheckBox", "x20 y40 w200 h20 " . (this.alwaysShow ? "Checked" : ""), "始终显示时间")
+        this.alwaysCheck.OnEvent("Click", this.AlwaysShowChangeHandler.Bind(this))
         this.ui.OnEvent("Close", this.OnClose.Bind(this))
     }
 
@@ -113,6 +118,12 @@ Class ConfigUi {
         Clock.textStyle.size := this.fontSizeInput.Value
         IniWrite(Clock.textStyle.size, Clock.configPath, "Text", "FontSize")
         Clock.Show()
+    }
+
+    static AlwaysShowChangeHandler(Ctrl, *) {
+        Clock.alwaysShow := Ctrl.Value
+        IniWrite(Clock.alwaysShow ? 1 : 0, Clock.configPath, "General", "AlwaysShow")
+        UpClockStatus()
     }
 
 }
