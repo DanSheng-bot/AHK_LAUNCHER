@@ -24,6 +24,7 @@ A_TrayMenu.Add("退出", (*) => ExitApp())
 UpClockStatus() ; 启动时检查一次当前窗口状态
 
 WinEvent.Active(WinActiveCallback) ; 监听窗口激活事件
+WinEvent.Move(WinActiveCallback) ; 监听窗口移动事件
 
 WinActiveCallback(*) {
     SetTimer(UpClockStatus, 0) ; 删除之前的定时器
