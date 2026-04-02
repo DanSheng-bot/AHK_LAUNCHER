@@ -30,7 +30,7 @@ WinActiveCallback(*) {
 }
 
 UpClockStatus() {
-    if (WinUtils.IsFullScreen() or ConfigUi.isShow()) ; 如果当前窗口是全屏窗口
+    if (WinUtils.IsFullScreen() or ConfigUi.isShow) ; 如果当前窗口是全屏窗口
     {
         Clock.Show() ; 显示时钟 
     }
@@ -88,27 +88,25 @@ Class Clock {
 }
 
 Class ConfigUi {
+
+    static isShow := false
+
     static __New() {
         this.ui := Gui()
         this.ui.Title := "ColckIFS设置"
         this.ui.Add("Text", "x20 y12 w60 h20", "字体大小:")
         this.fontSizeInput := this.ui.Add("Edit", "Number x80 y10 w50 h20", Clock.textStyle.size)
         this.fontSizeInput.OnEvent("Change", this.FontSizeInputChangeHandler.Bind(this))
-        this._isShown := false
         this.ui.OnEvent("Close", this.OnClose.Bind(this))
     }
 
     static show() {
         this.ui.Show("w620 h420")
-        this._isShown := true
-    }
-
-    static isShow() {
-        return this._isShown
+        this.isShow := true
     }
 
     static OnClose(*) {
-        this._isShown := false
+        this.isShow := false
     }
 
     static FontSizeInputChangeHandler(Ctrl, *) {
