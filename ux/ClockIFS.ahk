@@ -19,6 +19,8 @@ A_IconTip := "全屏应用时钟"
 A_TrayMenu.Delete()
 A_TrayMenu.Add("设置", (*) => ConfigUi.show())
 A_TrayMenu.Default := "1&"
+A_TrayMenu.Add()
+A_TrayMenu.Add("重载", (*) => Reload())
 A_TrayMenu.Add("退出", (*) => ExitApp())
 
 UpClockStatus() ; 启动时检查一次当前窗口状态
@@ -64,14 +66,15 @@ Class Clock {
 
     static __New() {
         this.tr.NoEvents() ; 不响应鼠标事件
-        this.tr.ClickThrough() ; 点击穿透
         this.tr.NoActivate() ; 不激活窗口
+        this.Render() ; 显示当前时间
+        this.tr.TopMost() ; 窗口置顶
+        this.tr.ClickThrough() ; 窗口穿透
     }
 
     static Show() {
         this.minutes := A_Min ; 记录当前分钟数
-        this.tr.Render(FormatTime(A_Now, "HH:mm"), this.trCfg, this.textStyle) ; 显示当前时间
-        this.tr.TopMost() ; 窗口置顶
+        this.Render() ; 显示当前时间
         SetTimer(this.trTimer, 1000) ; 每秒更新一次
     }
 
@@ -85,8 +88,12 @@ Class Clock {
         if (A_Min != this.minutes) ; 如果分钟数发生变化
         {
             this.minutes := A_Min ; 更新分钟数
-            this.tr.Render(FormatTime(A_Now, "HH:mm"), this.trCfg, this.textStyle) ; 更新显示的时间
+            this.Render() ; 更新显示的时间
         }
+    }
+
+    static Render() {
+        this.tr.Render(FormatTime(A_Now, "HH:mm"), this.trCfg, this.textStyle) ; 显示当前时间
     }
 }
 
@@ -109,10 +116,15 @@ Class ConfigUi {
 
     static show() {
         this.ui.Show("w620 h420")
+        Clock.tr.ClickThrough() ; 进入设置界面时关闭穿透，方便拖动窗口
+        Clock.tr.OnLeftMouseDown(TextRender.prototype.EventMoveWindowStorePosition)
         this.isShow := true
     }
 
     static OnClose(*) {
+        Clock.tr.NoEvents()
+        Clock.tr.OnLeftMouseDown()
+        Clock.tr.ClickThrough() ; 关闭设置界面时重新开启穿透
         this.isShow := false
     }
 
