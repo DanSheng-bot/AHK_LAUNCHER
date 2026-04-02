@@ -5,15 +5,16 @@
 #SingleInstance Force
 ;@Ahk2Exe-ExeName %A_ScriptDir%\program\ClockIFS.exe
 ;@Ahk2Exe-SetMainIcon ..\res\clock.ico
-;@Ahk2Exe-IgnoreBegin
-;#NoTrayIcon
-;@Ahk2Exe-IgnoreEnd
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
 #Include ..\lib\WinUtils.ahk
+;@Ahk2Exe-IgnoreBegin
+;#NoTrayIcon
+TraySetIcon("..\res\clock.ico") ; 设置托盘图标
+;@Ahk2Exe-IgnoreEnd
+
 Persistent true
 
-TraySetIcon("..\res\clock.ico") ; 设置托盘图标
 A_IconTip := "全屏应用时钟"
 A_TrayMenu.Delete()
 A_TrayMenu.Add("设置", (*) => ConfigUi.show())
