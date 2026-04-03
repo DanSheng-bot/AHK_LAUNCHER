@@ -3,7 +3,7 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-;@Ahk2Exe-ExeName %A_ScriptDir%\program\ClockIFS.exe
+;@Ahk2Exe-ExeName %A_ScriptDir%\program\ClockIFS1.0.3.exe
 ;@Ahk2Exe-SetMainIcon ..\res\clock.ico
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
@@ -45,7 +45,7 @@ UpClockStatus() {
 }
 
 Class Clock {
-
+    static dataDir := A_ScriptDir "\data"
     static configPath := A_ScriptDir "\data\ClockIFS.ini"
 
     static trCfg := {
@@ -65,6 +65,9 @@ Class Clock {
     static alwaysShow := IniRead(this.configPath, "General", "AlwaysShow", 0)
 
     static __New() {
+        if (!FileExist(this.dataDir)) {
+            DirCreate(this.dataDir) ; 创建数据目录
+        }
         this.tr.NoEvents() ; 不响应鼠标事件
         this.tr.NoActivate() ; 不激活窗口
         this.Render() ; 显示当前时间
