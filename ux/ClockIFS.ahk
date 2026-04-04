@@ -3,7 +3,7 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-;@Ahk2Exe-ExeName D:\Tools\ClockIFS1.0.4.exe
+;@Ahk2Exe-ExeName D:\Tools\ClockIFS1.0.5.exe
 ;@Ahk2Exe-SetMainIcon ..\res\clock.ico
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
