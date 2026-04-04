@@ -3,7 +3,7 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-;@Ahk2Exe-ExeName D:\Tools\ClockIFS1.0.3.exe
+;@Ahk2Exe-ExeName D:\Tools\ClockIFS1.0.4.exe
 ;@Ahk2Exe-SetMainIcon ..\res\clock.ico
 #Include ..\lib\TextRender.ahk
 #Include ..\lib\WinEvent.ahk
@@ -36,17 +36,19 @@ WinActiveCallback(*) {
 UpClockStatus() {
     if (Clock.alwaysShow or WinUtils.IsFullScreen() or ConfigUi.isShow) ; 如果始终显示 或 当前窗口是全屏窗口
     {
-        Clock.Show() ; 显示时钟 
+        if (!Clock.isShow) ; 如果时钟当前未显示
+            Clock.Show() ; 显示时钟
     }
     else
-    {
-        Clock.Hide() ; 隐藏时钟
+    { if (Clock.isShow) ; 如果时钟当前正在显示
+            Clock.Hide() ; 隐藏时钟
     }
 }
 
 Class Clock {
     static dataDir := A_ScriptDir "\data"
     static configPath := A_ScriptDir "\data\ClockIFS.ini"
+    static isShow := false
 
     static trCfg := {
         top: 20, ; 窗口Y坐标
@@ -54,7 +56,6 @@ Class Clock {
     }
     static textStyle := {
         size: IniRead(this.configPath, "Text", "FontSize", 52), ; 字体大小
-        font: IniRead(this.configPath, "Text", "FontFamily", "微软雅黑"), ; 字体
         color: "White",
         outline: { stroke: 1, glow: 4, tint: "Black" },
         dropShadow: { blur: "5px", color: "White", opacity: 0.5, size: 15 }
@@ -78,11 +79,13 @@ Class Clock {
     static Show() {
         this.minutes := A_Min ; 记录当前分钟数
         this.Render() ; 显示当前时间
+        SetTimer(this.trTimer, 0) ; 删除之前的定时器
         SetTimer(this.trTimer, 1000) ; 每秒更新一次
     }
 
     static Hide() {
         this.tr.Clear() ; 清除显示的时间
+        this.isShow := false
         SetTimer(this.trTimer, 0) ; 关闭定时器
     }
 
@@ -97,6 +100,7 @@ Class Clock {
 
     static Render() {
         this.tr.Render(FormatTime(A_Now, "HH:mm"), this.trCfg, this.textStyle) ; 显示当前时间
+        this.isShow := true
     }
 }
 
@@ -120,7 +124,7 @@ Class ConfigUi {
     static show() {
         this.ui.Show("w620 h420")
         Clock.tr.ClickThrough() ; 进入设置界面时关闭穿透，方便拖动窗口
-        Clock.tr.OnLeftMouseDown(TextRender.prototype.EventMoveWindowStorePosition)
+        Clock.tr.OnLeftMouseDown((this) => this.EventMoveWindowStorePosition())
         this.isShow := true
     }
 

@@ -119,7 +119,7 @@ class TextRender {
 
    ForgetRecipe(n := "✿sentinel✿") {
       ; Redraws are no longer possible!
-      if (n = "✿sentinel✿")
+      if (n == "✿sentinel✿")
          this.layers := []
 
       else
@@ -251,7 +251,7 @@ class TextRender {
 
    ValidateWindow() {
       WinGetPos &x, &y, &w, &h, this.hwnd
-      this.WindowTime := 0  ; Use a dummy variable here
+      this.HasProp("WindowTime") || this.WindowTime := 0  ; Use a dummy variable here
       this.WindowLeft := x
       this.WindowTop := y
       this.WindowRight := x + w
@@ -434,6 +434,7 @@ class TextRender {
          return this
 
       ; Takes a picture even when the window is fully invisible!
+      this.ValidateWindow()  ; Refresh window coordinates
       pBitmap := TextRender.ScreenshotToBitmap([this.WindowLeft, this.WindowTop, this.WindowWidth, this.WindowHeight])
       TextRender.BitmapToFile(pBitmap, filepath, quality)
       DllCall("gdiplus\GdipDisposeImage", "ptr", pBitmap)
@@ -461,6 +462,11 @@ class TextRender {
    }
 
    FreeBitmap() {
+      this.DeleteProp("ViewportLeft")
+      this.DeleteProp("ViewportTop")
+      this.DeleteProp("ViewportWidth")
+      this.DeleteProp("ViewportHeight")
+
       this.DeleteProp("BitmapWidth")
       this.DeleteProp("BitmapHeight")
       this.DeleteProp("BitmapLeft")
@@ -500,8 +506,8 @@ class TextRender {
 
       ; Update the viewport to the new primary monitor!
       try dpi := DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
-      this.ViewportTop := 0
       this.ViewportLeft := 0
+      this.ViewportTop := 0
       this.ViewportWidth := A_ScreenWidth
       this.ViewportHeight := A_ScreenHeight
       try DllCall("SetThreadDpiAwarenessContext", "ptr", dpi, "ptr")
@@ -776,7 +782,7 @@ class TextRender {
 
    Render(data := "✿sentinel✿", styles*) {
 
-      if (data != "✿sentinel✿")
+      if !(data == "✿sentinel✿")
          ; recipestate x → 1 - Saves the data and styles to the layers
          ; bitmapstate x → 2 ← x - Allocates memory and fills it with drawings
          this.Draw(data, styles*)
@@ -2612,12 +2618,14 @@ class TextRender {
    }
 
    EventMoveWindowStorePosition() {
-      ; Original window move functionality
+      WinGetPos &x1, &y1,,, this.hwnd
+
+      ; Allows the user to drag to reposition the window.
       DllCall("DefWindowProc", "ptr", this.hwnd, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
 
-      WinGetPos &x, &y,,, this.hwnd
-      this.ViewportLeft += x - this.WindowLeft
-      this.ViewportTop += y - this.WindowTop
+      WinGetPos &x2, &y2,,, this.hwnd
+      this.ViewportLeft += x2 - x1
+      this.ViewportTop += y2 - y1
    }
 
    EventShowCoordinates() {
@@ -2725,7 +2733,7 @@ class TextRender {
       DllCall("gdiplus\GdipTranslateWorldTransform", "ptr", Graphics, "float", -this.x, "float", -this.y, "int", 0)
 
       for _, layer in this.layers
-         this.DrawOnGraphics(Graphics, layer[1], layer[2], layer[3], this.ViewportWidth, this.ViewportHeight, this.ViewportTop, this.ViewportLeft)
+         this.DrawOnGraphics(Graphics, layer[1], layer[2], layer[3], this.ViewportWidth, this.ViewportHeight, this.ViewportLeft, this.ViewportTop)
 
       DllCall("gdiplus\GdipDeleteGraphics", "ptr", Graphics)
       DllCall("SelectObject", "ptr", hdc, "ptr", obm)
