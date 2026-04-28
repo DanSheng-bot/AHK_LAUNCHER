@@ -2,8 +2,8 @@
 ; License:   MIT License
 ; Author:    Edison Hua (iseahound)
 ; Github:    https://github.com/iseahound/TextRender
-; Date:      2026-03-30
-; Version:   2.1.7
+; Date:      2026-04-18
+; Version:   2.1.8
 
 #Requires AutoHotkey v2.0-beta.13+
 
@@ -62,7 +62,7 @@ class TextRender {
       this.OffsetTop := OffsetTop
 
       ; Initalize default events.
-      this.events := Map()
+      this.events := {}
       this.OnEvent("LeftMouseDown", this.EventMoveWindow)
       this.OnEvent("MiddleMouseDown", this.EventShowCoordinates)
       this.OnEvent("RightMouseDown", this.EventCopyData)
@@ -605,6 +605,14 @@ class TextRender {
    }
 
    DrawBitmap(data := "", style1 := "", style2 := "") {
+      ; (Pull) Corrects the drawing while the user is moving the window.
+      dx := dy := 0
+      if this.HasProp("OriginLeft") && this.HasProp("OriginTop") {
+         DllCall("GetCursorPos", "ptr", point := Buffer(8))
+         dx := NumGet(point, 0, "int") - this.OriginLeft
+         dy := NumGet(point, 4, "int") - this.OriginTop
+      }
+
       ; Draw relative to the viewport coordinates.
       that := this.DrawOnGraphics(this.Graphics
          , data
@@ -612,8 +620,8 @@ class TextRender {
          , style2
          , this.ViewportWidth
          , this.ViewportHeight
-         , this.ViewportLeft
-         , this.ViewportTop)
+         , this.ViewportLeft + dx
+         , this.ViewportTop + dy)
 
       ; Set canvas coordinates. Ensure the starting coordinates are blank.
       this.HasProp("t")  && that.HasProp("t")  ? this.t  := max(this.t, that.t) : that.HasProp("t") && this.t  := that.t
@@ -692,7 +700,7 @@ class TextRender {
       this.Forget()              ; recipestate 0 ← x
       this.Erase()               ; bitmapstate 1 ← x
       this.Hide()                ; windowstate 1 ← x
-      this.OnEvent("Clear")
+      this.CallEvent("Clear")
       return this
    }
 
@@ -2540,7 +2548,7 @@ class TextRender {
 
          ; Match window messages to Rainmeter event names.
          ; https://docs.rainmeter.net/manual/mouse-actions/
-         dict :=
+         message_events :=
 
          {
             0x0201  : "LeftMouseDown",
@@ -2552,20 +2560,34 @@ class TextRender {
             0x0207  : "MiddleMouseDown",
             0x0208  : "MiddleMouseUp",
             0x0209  : "MiddleMouseDoubleClick",
+            0x020A  : ["MouseScrollUp", "MouseScrollDown"],
+            0x020B  : ["X1MouseDown", "X2MouseDown"],
+            0x020C  : ["X1MouseUp", "X2MouseUp"],
+            0x020D  : ["X1MouseDoubleClick", "X2MouseDoubleClick"],
+            0x020E  : ["MouseScrollLeft", "MouseScrollRight"],
             0x02A1  : "MouseOver",
             0x02A3  : "MouseLeave"
          }
 
 
          ; Process windows messages by invoking the associated callback.
-         for message, event in dict.OwnProps()
-            if (uMsg = message)
-               if callback := self.events.get(event, "") {
+         for message, events in message_events.OwnProps()
+            if (uMsg = message) {
+               switch uMsg {
+                  case 0x020A: event := (wParam & 0x80000000) ? events[2] : events[1]
+                  case 0x020B: event := (wParam & 0x10000) ? events[1] : events[2]
+                  case 0x020C: event := (wParam & 0x10000) ? events[1] : events[2]
+                  case 0x020D: event := (wParam & 0x10000) ? events[1] : events[2]
+                  case 0x020E: event := (wParam & 0x80000000) ? events[1] : events[2]
+                  default:     event := events
+               }
+               if self.events.HasOwnProp(event) && callback := self.events.%event% {
                   (callback.MinParams = 0) ? callback() : callback(self) ; Callbacks have a reference to "self".
                   try return
                   finally ListLines ll
                }
-
+            }
+                  
          ; Default processing of window messages.
          try return DllCall("DefWindowProc", "ptr", hwnd, "uint", uMsg, "uptr", wParam, "ptr", lParam, "ptr")
          finally ListLines ll
@@ -2577,7 +2599,7 @@ class TextRender {
    }
 
    DefaultEvents() {
-      this.events := Map("LeftMouseDown", this.EventMoveWindow, "RightMouseUp", this.DestroyWindow)
+      this.events := {LeftMouseDown: this.EventMoveWindow, RightMouseUp: this.DestroyWindow}
       return this
    }
 
@@ -2586,25 +2608,25 @@ class TextRender {
    }
 
    NoEvents() {
-      this.events := Map()
+      this.events := {}
       return this
    }
 
    OnEvent(event, callback := "") {
-      this.events[event] := callback
+      this.events.%event% := callback
       return this
    }
 
    __Call(name, ps) {
       if (name ~= "(?i)^On(?!Event$)") {
-         this.events[SubStr(name, 3)] := ps.has(1) ? ps[1] : ""
+         this.events.%SubStr(name, 3)% := ps.has(1) ? ps[1] : ""
          return this
       }
       throw Error("This value of type TextRender has no method named " name ".")
    }
 
    CallEvent(event) {
-      if callback := this.events.get(event, "")
+      if this.events.HasOwnProp(event) && callback := this.events.%event%
          return (callback.MinParams = 0) ? callback() : callback(this) ; Callbacks have a reference to "this".
    }
 
@@ -2613,19 +2635,41 @@ class TextRender {
    }
 
    EventMoveWindow() {
-      ; Allows the user to drag to reposition the window.
+      ; (Pull) Temporary variables
+      DllCall("GetCursorPos", "ptr", point := Buffer(8))
+         , x := NumGet(point, 0, "int")
+         , y := NumGet(point, 4, "int")
+      this.OriginLeft := x
+      this.OriginTop := y
+
+      ; Blocks to allow the user to drag to reposition the window.
       DllCall("DefWindowProc", "ptr", this.hwnd, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
+
+      ; (Pull) Deletes temporary variables to disable pulling of new window positions.
+      this.DeleteProp("OriginLeft")
+      this.DeleteProp("OriginTop")
+
+      return {Left: x, Top: y}
    }
 
    EventMoveWindowStorePosition() {
-      WinGetPos &x1, &y1,,, this.hwnd
+      Origin := this.EventMoveWindow()
 
-      ; Allows the user to drag to reposition the window.
-      DllCall("DefWindowProc", "ptr", this.hwnd, "uint", 0xA1, "uptr", 2, "ptr", 0, "ptr")
+      ; (Push) Update Viewport Coordinates to allow repositioning during drawing.
+      DllCall("GetCursorPos", "ptr", point := Buffer(8))
+         , x := NumGet(point, 0, "int")
+         , y := NumGet(point, 4, "int")
+      this.ViewportLeft += x - Origin.Left
+      this.ViewportTop += y - Origin.Top
 
-      WinGetPos &x2, &y2,,, this.hwnd
-      this.ViewportLeft += x2 - x1
-      this.ViewportTop += y2 - y1
+      ; Selectively invalidate the backbuffer as it is now out of sync.
+      if (this.recipestate = 1)
+         this.Erase()
+   }
+
+   EventMoveWindowStorePositionAndRender() {
+      this.EventMoveWindowStorePosition()
+      this.Render()
    }
 
    EventShowCoordinates() {
