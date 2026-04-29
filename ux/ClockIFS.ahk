@@ -28,6 +28,9 @@ UpClockStatus() ; 启动时检查一次当前窗口状态
 WinEvent.Active(WinActiveCallback) ; 监听窗口激活事件
 WinEvent.Move(WinActiveCallback) ; 监听窗口移动事件
 
+; 监听DPI变化事件
+OnMessage(0x02E0, ObjBindMethod(Clock, "OnDpiChanged")) ; WM_DPICHANGED
+
 WinActiveCallback(*) {
     SetTimer(UpClockStatus, 0) ; 删除之前的定时器
     SetTimer(UpClockStatus, -100) ; 设置定时器，100ms后执行UpClockStatus函数
@@ -50,15 +53,18 @@ Class Clock {
     static configPath := A_ScriptDir "\data\ClockIFS.ini"
     static isShow := false
 
+    static dpiScale := A_ScreenDPI / 96.0 ; DPI缩放因子
+    static originalSize := IniRead(this.configPath, "Text", "FontSize", 52) ; 原始字体大小
+
     static trCfg := {
         top: 20, ; 窗口Y坐标
         color: "None", ; 背景色
     }
     static textStyle := {
-        size: IniRead(this.configPath, "Text", "FontSize", 52), ; 字体大小
+        size: Round(this.originalSize * this.dpiScale), ; 字体大小
         color: "White",
-        outline: { stroke: 1, glow: 4, tint: "Black" },
-        dropShadow: { blur: "5px", color: "White", opacity: 0.5, size: 15 }
+        outline: { stroke: Round(1 * this.dpiScale), glow: Round(4 * this.dpiScale), tint: "Black" },
+        dropShadow: { blur: "5px", color: "White", opacity: 0.5, size: Round(15 * this.dpiScale) }
     }
     static tr := TextRender()
     static trTimer := ObjBindMethod(this, "UpTime")
@@ -72,9 +78,26 @@ Class Clock {
         }
         this.tr.NoEvents() ; 不响应鼠标事件
         this.tr.NoActivate() ; 不激活窗口
-        this.Render() ; 显示当前时间
+        this.Show() ; 启动时显示一次，确保窗口被创建
         this.tr.TopMost() ; 窗口置顶
         this.tr.ClickThrough() ; 窗口穿透
+    }
+
+    ; 监听DPI变化
+    static OnDpiChanged(wParam, lParam, msg, hwnd) {
+        if (hwnd == this.tr.hwnd) {
+            newDpi := wParam & 0xFFFF  ; 低16位是x DPI
+            this.dpiScale := newDpi / 96.0
+            ; 重新计算缩放参数
+            this.trCfg.top := Round(20 * this.dpiScale)
+            this.textStyle.size := Round(this.originalSize * this.dpiScale)
+            this.textStyle.outline.stroke := Round(1 * this.dpiScale)
+            this.textStyle.outline.glow := Round(4 * this.dpiScale)
+            this.textStyle.dropShadow.size := Round(15 * this.dpiScale)
+            if (this.isShow) {
+                this.Render()
+            }
+        }
     }
 
     static Show() {
@@ -118,7 +141,7 @@ Class ConfigUi {
         ; 显示设置组
         this.ui.Add("GroupBox", "x10 y10 w280 h100", "显示设置")
         this.ui.Add("Text", "x20 y35 w80 h20", "字体大小:")
-        this.fontSizeInput := this.ui.Add("Edit", "Number x100 y33 w50 h20", Clock.textStyle.size)
+        this.fontSizeInput := this.ui.Add("Edit", "Number x100 y33 w50 h20", Clock.originalSize)
         this.fontSizeInput.OnEvent("Change", this.FontSizeInputChangeHandler.Bind(this))
 
         ; 时间格式设置组
@@ -149,8 +172,9 @@ Class ConfigUi {
     }
 
     static FontSizeInputChangeHandler(Ctrl, *) {
-        Clock.textStyle.size := this.fontSizeInput.Value
-        IniWrite(Clock.textStyle.size, Clock.configPath, "Text", "FontSize")
+        Clock.originalSize := this.fontSizeInput.Value
+        Clock.textStyle.size := Round(Clock.originalSize * Clock.dpiScale)
+        IniWrite(Clock.originalSize, Clock.configPath, "Text", "FontSize")
         Clock.Show()
     }
 
