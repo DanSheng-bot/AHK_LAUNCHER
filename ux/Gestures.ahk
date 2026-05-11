@@ -111,7 +111,7 @@ OnMessage(WM_DISPLAYCHANGE, ON_WM_DISPLAYCHANGE)
 
 ON_WM_DISPLAYCHANGE(wParam, lParam, *) {
     SetTimer(DisplayChanged, 0)
-    SetTimer(DisplayChanged, -1000)
+    SetTimer(DisplayChanged, -6000)
 }
 
 DisplayChanged(){
