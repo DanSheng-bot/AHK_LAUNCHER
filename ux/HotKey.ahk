@@ -20,7 +20,8 @@ KeyHistory(3)
 SetWinDelay 2
 CoordMode "Mouse"
 
-tr := TextRender()
+tr := TextRender().Create()
+tr.AlwaysOnTop()
 tr.NoEvents() ; 无事件
 tr.ClickThrough() ; 点击穿透
 tr.NoActivate() ; 不激活窗口
@@ -49,7 +50,6 @@ lWinS := 0
 $Pause:: {
     Send("{Media_Play_Pause}")
     tr.Render("Media Play/Pause", { Y: "80%", r: "10%", time: 1000 }, { b: true })
-    tr.TopMost() ; 始终在最上层
 }
 
 ; Win + Pause 发送Pause键
@@ -57,7 +57,6 @@ $Pause:: {
     Send("{Pause}")
     global lWinS := 3
     tr.Render("Pause", { Y: "80%", r: "10%", time: 1000 }, { b: true })
-    tr.TopMost() ; 始终在最上层
 }
 
 ; 双击CapsLock切换大小写
@@ -158,6 +157,23 @@ v::#!^+v
         WinClip.SetText(WinClip.History.Item[4].Content.GetText(), false)
         SendEvent("^v")
     }
+}
+
+; 将英文逗号和句号替换为中文
+,:: {
+    Send("，")
+}
+
+.:: {
+    Send("。")
+}
+
+\:: {
+    Send("、")
+}
+
+`;:: {
+    Send("；")
 }
 
 ; 拖动窗口

@@ -66,7 +66,7 @@ Class Clock {
         outline: { stroke: Round(1 * this.dpiScale), glow: Round(4 * this.dpiScale), tint: "Black" },
         dropShadow: { blur: "5px", color: "White", opacity: 0.5, size: Round(15 * this.dpiScale) }
     }
-    static tr := TextRender()
+    static tr := TextRender().Create()
     static trTimer := ObjBindMethod(this, "UpTime")
     static minutes := A_Min ; 记录当前分钟数
     static alwaysShow := IniRead(this.configPath, "General", "AlwaysShow", 0)
@@ -78,7 +78,6 @@ Class Clock {
         }
         this.tr.NoEvents() ; 不响应鼠标事件
         this.tr.NoActivate() ; 不激活窗口
-        this.Show() ; 启动时显示一次，确保窗口被创建
         this.tr.TopMost() ; 窗口置顶
         this.tr.ClickThrough() ; 窗口穿透
     }
