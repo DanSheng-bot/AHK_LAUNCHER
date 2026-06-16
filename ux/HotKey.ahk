@@ -19,6 +19,7 @@ InstallKeybdHook
 KeyHistory(3)
 SetWinDelay 2
 CoordMode "Mouse"
+A_MaxHotkeysPerInterval := 1000   ; 2000ms 内允许 1000 次热键触发
 
 tr := TextRender().Create()
 tr.AlwaysOnTop()
@@ -246,6 +247,8 @@ $RButton::
 
 #HotIf
 
+^WheelUp::Return
+^WheelDown::Return
 
 ;获取选择的文本
 GetSelectedText() {
