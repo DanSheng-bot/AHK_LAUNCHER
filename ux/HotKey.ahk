@@ -30,11 +30,16 @@ tr.NoActivate() ; 不激活窗口
 ; 切换窗口后关闭大写锁定键
 WinEvent.Active((*) => SetCapsLockState('Off'))
 
-; 长按win键不发送
+;长按win键不发送
 lWinS := 0
 ~LWin:: {
     Send "{Blind}{vkFF}"
     global lWinS := lWinS + 1
+}
+; Win组合自定义热键，每一个都手动 lWinS+=1，告诉LWin‑Up：我已经用了Win组合
+#c:: {
+    global lWinS +=1
+    SendInput("^c")
 }
 ~LWin Up:: {
     OutputDebug(A_PriorKey)
