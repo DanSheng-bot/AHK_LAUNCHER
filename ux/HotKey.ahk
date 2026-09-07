@@ -41,6 +41,22 @@ lWinS := 0
     global lWinS +=1
     SendInput("^c")
 }
+#x:: {
+    global lWinS +=1
+    SendInput("^x")
+}
+#z:: {
+    global lWinS +=1
+    SendInput("^z")
+}
+#a:: {
+    global lWinS +=1
+    SendInput("^a")
+}
+#s:: {
+    global lWinS +=1
+    SendInput("^s")
+}
 ~LWin Up:: {
     OutputDebug(A_PriorKey)
     if (A_PriorKey = "" and lWinS < 2) {
